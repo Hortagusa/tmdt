@@ -1,0 +1,137 @@
+{% extends 'users/base.html' %}
+{% load humanize %}
+
+{% block body %}
+<div class="container" style="max-width: 1000px;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">🛒 Your Cart</h3>
+            <div class="text-muted">Review and manage your shopping cart</div>
+        </div>
+    </div>
+
+    {% if items %}
+    <div class="row g-4">
+
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+            {% for item in items %}
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+
+                    <!-- Product image -->
+                    <div class="rounded-3 overflow-hidden"
+                         style="width:90px;height:90px;">
+                        <a href="{% url 'shops:product_detail' item.product.id %}">
+                            <div class="rounded-3 overflow-hidden"
+                                 style="width:90px;height:90px;">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}"
+                                         class="w-100 h-100"
+                                         style="object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-image text-muted fs-3"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1">{{ item.product.name }}</h6>
+                        <div class="text-muted small">{{ item.product.price|intcomma }} đ / sản phẩm</div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <form method="post" action="{% url 'shops:update_cart_item' item.id %}" class="d-flex align-items-center gap-2">
+                        {% csrf_token %}
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
+                               class="form-control form-control-sm text-center" style="width:70px;">
+                        <button type="submit" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                            Update
+                        </button>
+                    </form>
+
+                    <!-- Price -->
+                    <div class="text-end" style="min-width:120px;">
+                        <div class="fw-semibold text-danger">{{ item.total_price|intcomma }} đ</div>
+                        <a href="{% url 'shops:remove_cart_item' item.id %}" class="text-danger small text-decoration-none">
+                            <i class="bi bi-trash"></i> Remove
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Order Summary</h5>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Items</span>
+                        <span>{{ total_quantity }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Total</span>
+                        <span class="fw-bold text-danger">{{ total|intcomma }} đ</span>
+                    </div>
+
+                    <hr>
+
+                    <a href="{% url 'shops:checkout' %}" class="btn btn-primary w-100 rounded-pill py-2">
+                        <i class="bi bi-credit-card"></i> Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- Empty cart -->
+    <div class="text-center py-5">
+        <i class="bi bi-cart-x fs-1 text-muted"></i>
+        <h5 class="mt-3">Your cart is empty</h5>
+        <p class="text-muted">Looks like you haven't added anything yet</p>
+        <a href="{% url 'shops:all_shops' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="bi bi-shop"></i> Start shopping
+        </a>
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+        {% for message in messages %}
+        <div class="toast align-items-center text-bg-{{ message.tags }} border-0 show mb-2" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+.card{
+    transition: all .25s ease;
+}
+.card:hover{
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
