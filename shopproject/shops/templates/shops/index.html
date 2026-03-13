@@ -25,6 +25,29 @@
             </div>
         {% endif %}
     </div>
+
+        {% if low_stock_products %}
+        <div class="alert alert-warning shadow-sm rounded-4 mb-4">
+            <div class="d-flex align-items-center mb-2">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Low Stock Warning</strong>
+            </div>
+
+            <div class="small">
+                Các sản phẩm của bạn sắp hết hàng:
+            </div>
+
+            <ul class="mb-0 mt-2">
+                {% for p in low_stock_products %}
+                <li>
+                    {{ p.name }} – chỉ còn
+                    <strong>{{ p.stock }}</strong> sản phẩm
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
     <!-- Category filter bar -->
     <div class="mb-4">
         <div class="d-flex flex-wrap gap-2">

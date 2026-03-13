@@ -1,0 +1,109 @@
+{% extends 'users/base.html' %}
+{% load humanize %}
+
+{% block body %}
+
+<div class="container py-4" style="max-width:900px;">
+
+    <!-- Wallet Card -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+
+        <div class="card-body text-center">
+
+            <h6 class="text-muted mb-2">
+                <i class="bi bi-wallet2"></i> Your Balance
+            </h6>
+
+            <h2 class="fw-bold text-success">
+                {{ wallet.balance|intcomma }} VNĐ
+            </h2>
+
+        </div>
+
+    </div>
+
+    <!-- Transaction title -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <h5 class="fw-semibold mb-0">
+            <i class="bi bi-clock-history"></i>
+            Transaction History
+        </h5>
+
+    </div>
+
+    <!-- Transactions table -->
+    <div class="card border-0 shadow-sm rounded-4">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for t in transactions %}
+
+                <tr>
+
+                    <!-- Type -->
+                    <td>
+
+                        {% if t.transaction_type == "deposit" %}
+                        <span class="badge bg-success">
+                            Deposit
+                        </span>
+
+                        {% elif t.transaction_type == "withdraw" %}
+                        <span class="badge bg-danger">
+                            Withdraw
+                        </span>
+
+                        {% else %}
+                        <span class="badge bg-secondary">
+                            {{ t.transaction_type }}
+                        </span>
+                        {% endif %}
+
+                    </td>
+
+                    <!-- Amount -->
+                    <td class="fw-semibold">
+                        {{ t.amount|intcomma }} VNĐ
+                    </td>
+
+                    <!-- Date -->
+                    <td class="text-muted">
+                        {{ t.created|date:"d/m/Y H:i" }}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">
+                        No transactions yet
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

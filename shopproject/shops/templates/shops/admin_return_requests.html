@@ -1,0 +1,154 @@
+{% extends 'users/base.html' %}
+{% load humanize %}
+
+{% block body %}
+
+<div class="container py-4" style="max-width:1100px;">
+
+    <!-- Title -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Return Requests
+        </h3>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>Order</th>
+                        <th>User</th>
+                        <th style="width:300px;">Reason</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for r in requests %}
+
+                <tr>
+
+                    <!-- Order -->
+                    <td>
+                        <a href="{% url 'shops:admin_order_detail' r.order.id %}"
+                           class="fw-semibold text-decoration-none">
+                            #{{ r.order.id }}
+                        </a>
+                    </td>
+
+                    <!-- User -->
+                    <td>
+                        <i class="bi bi-person"></i>
+                        {{ r.user.username }}
+                    </td>
+
+                    <!-- Reason -->
+                    <td class="text-muted small">
+                        {{ r.reason|truncatechars:80 }}
+                    </td>
+
+                    <!-- Status -->
+                    <td>
+
+                        {% if r.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">
+                                Pending
+                            </span>
+
+                        {% elif r.status == 'approved' %}
+                            <span class="badge bg-primary">
+                                Approved
+                            </span>
+
+                        {% elif r.status == 'refunded' %}
+                            <span class="badge bg-success">
+                                Refunded
+                            </span>
+
+                        {% elif r.status == 'rejected' %}
+                            <span class="badge bg-danger">
+                                Rejected
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <!-- Date -->
+                    <td class="text-muted small">
+                        {{ r.created|naturaltime }}
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="text-end">
+
+                        {% if r.status == "pending" %}
+
+                        <div class="d-flex justify-content-end gap-2">
+
+                            <a href="{% url 'shops:approve_refund' r.id %}"
+                               class="btn btn-sm btn-success rounded-pill"
+                               onclick="return confirm('Approve refund for order #{{ r.order.id }}?')">
+
+                               <i class="bi bi-check-lg"></i>
+                               Approve
+                            </a>
+
+                            <a href="{% url 'shops:reject_return' r.id %}"
+                               class="btn btn-sm btn-outline-danger rounded-pill"
+                               onclick="return confirm('Reject return request?')">
+
+                               <i class="bi bi-x-lg"></i>
+                               Reject
+                            </a>
+
+                        </div>
+
+                        {% elif r.status == "refunded" %}
+
+                            <span class="text-success fw-semibold">
+                                <i class="bi bi-check-circle"></i>
+                                Completed
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+
+                        <i class="bi bi-inbox fs-3"></i>
+
+                        <div class="mt-2">
+                            No return requests
+                        </div>
+
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

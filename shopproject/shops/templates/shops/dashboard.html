@@ -4,276 +4,346 @@
 {% block body %}
 
 <style>
-    .dashboard-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        transition: all 0.2s ease;
-    }
 
-    .dashboard-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(0,0,0,0.08);
-    }
+.dashboard-card{
+border:none;
+border-radius:16px;
+box-shadow:0 4px 20px rgba(0,0,0,0.05);
+transition:all .2s ease;
+}
 
-    .dashboard-title {
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        color: #6c757d;
-        font-weight: 600;
-    }
+.dashboard-card:hover{
+transform:translateY(-3px);
+box-shadow:0 10px 28px rgba(0,0,0,.08);
+}
 
-    .dashboard-value {
-        font-size: 24px;
-        font-weight: 700;
-    }
+.dashboard-title{
+font-size:12px;
+text-transform:uppercase;
+letter-spacing:.7px;
+color:#6c757d;
+font-weight:600;
+}
 
-    .table thead th {
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        color: #6c757d;
-        border-bottom: 1px solid #f1f1f1;
-    }
+.dashboard-value{
+font-size:26px;
+font-weight:700;
+margin-top:3px;
+}
 
-    .card-header {
-        background: transparent !important;
-        border-bottom: 1px solid #f1f1f1 !important;
-        font-weight: 600;
-    }
+.card-header{
+background:transparent!important;
+border-bottom:1px solid #eee!important;
+font-weight:600;
+font-size:15px;
+padding:14px 18px;
+}
+
+.table thead th{
+font-size:12px;
+text-transform:uppercase;
+letter-spacing:.6px;
+color:#6c757d;
+border-bottom:1px solid #eee;
+padding:14px 18px;
+}
+
+.table td{
+padding:14px 18px;
+vertical-align:middle;
+}
+
+.filter-box input,
+.filter-box select{
+border-radius:10px;
+}
+
 </style>
+
 
 <div class="container-fluid py-4">
 
-    <!-- HEADER -->
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1">📊 Thống kê doanh thu</h3>
-        <div class="text-muted">Theo dõi tổng quan hoạt động kinh doanh</div>
-    </div>
+<!-- HEADER -->
+<div class="mb-4">
+<h3 class="fw-bold mb-1">📊 Thống kê doanh thu</h3>
+<div class="text-muted">Theo dõi tổng quan hoạt động kinh doanh</div>
+</div>
 
-    <!-- KPI CARDS -->
-    <div class="row g-4 mb-4">
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card dashboard-card h-100 p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="dashboard-title">Tổng doanh thu</div>
-                        <div class="dashboard-value text-success">
-                            {{ total_revenue|intcomma }} đ
-                        </div>
-                    </div>
-                    <div class="bg-success bg-opacity-10 p-3 rounded-circle">
-                        <i class="bi bi-cash-coin fs-4 text-success"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- KPI -->
+<div class="row g-4 mb-4">
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card dashboard-card h-100 p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="dashboard-title">Tổng đơn hàng</div>
-                        <div class="dashboard-value text-primary">
-                            {{ total_orders }}
-                        </div>
-                    </div>
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
-                        <i class="bi bi-bag-check fs-4 text-primary"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="col-xl-3 col-md-6">
+<div class="card dashboard-card h-100 p-4">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<div class="dashboard-title">Tổng doanh thu</div>
+<div class="dashboard-value text-success">
+{{ total_revenue|intcomma }} đ
+</div>
+</div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card dashboard-card h-100 p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="dashboard-title">Doanh thu tháng này</div>
-                        <div class="dashboard-value text-warning">
-                            {{ revenue_this_month|intcomma }} đ
-                        </div>
-                    </div>
-                    <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
-                        <i class="bi bi-calendar-month fs-4 text-warning"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="bg-success bg-opacity-10 p-3 rounded-circle">
+<i class="bi bi-cash-coin fs-4 text-success"></i>
+</div>
 
-        <div class="col-xl-3 col-md-6">
-            <div class="card dashboard-card h-100 p-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <div class="dashboard-title">Doanh thu hôm nay</div>
-                        <div class="dashboard-value text-danger">
-                            {{ revenue_today|intcomma }} đ
-                        </div>
-                    </div>
-                    <div class="bg-danger bg-opacity-10 p-3 rounded-circle">
-                        <i class="bi bi-calendar-day fs-4 text-danger"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
+</div>
+</div>
+</div>
 
-    </div>
 
-    <!-- FILTER -->
-    <div class="card dashboard-card mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+<div class="col-xl-3 col-md-6">
+<div class="card dashboard-card h-100 p-4">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<div class="dashboard-title">Tổng đơn hàng</div>
+<div class="dashboard-value text-primary">
+{{ total_orders }}
+</div>
+</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Tháng</label>
-                    <select name="month" class="form-select">
-                        <option value="">Tất cả</option>
-                        {% for m in months %}
-                        <option value="{{ m }}" {% if month == m %}selected{% endif %}>
-                            Tháng {{ m }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+<div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+<i class="bi bi-bag-check fs-4 text-primary"></i>
+</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Năm</label>
-                    <select name="year" class="form-select">
-                        <option value="">Tất cả</option>
-                        {% for y in years %}
-                        <option value="{{ y }}" {% if year == y %}selected{% endif %}>
-                            {{ y }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+</div>
+</div>
+</div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Từ ngày</label>
-                    <input type="date" name="start_date"
-                           value="{{ start_date|default:'' }}"
-                           class="form-control">
-                </div>
 
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Đến ngày</label>
-                    <input type="date" name="end_date"
-                           value="{{ end_date|default:'' }}"
-                           class="form-control">
-                </div>
+<div class="col-xl-3 col-md-6">
+<div class="card dashboard-card h-100 p-4">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<div class="dashboard-title">Doanh thu tháng này</div>
+<div class="dashboard-value text-warning">
+{{ revenue_this_month|intcomma }} đ
+</div>
+</div>
 
-                <div class="col-md-3">
-                    <button class="btn btn-primary w-100">
-                        <i class="bi bi-filter"></i> Lọc dữ liệu
-                    </button>
-                </div>
+<div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+<i class="bi bi-calendar-month fs-4 text-warning"></i>
+</div>
 
-            </form>
-        </div>
-    </div>
+</div>
+</div>
+</div>
 
-    <!-- DOANH THU TABLE -->
-    <div class="card dashboard-card mb-4">
-        <div class="card-header">
-            {% if start_date and end_date %}
-                📅 Doanh thu theo ngày ({{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }})
-            {% elif month and year %}
-                📆 Doanh thu tháng {{ month }}/{{ year }}
-            {% elif year %}
-                📊 Doanh thu theo tháng năm {{ year }}
-            {% else %}
-                📈 Doanh thu theo năm
-            {% endif %}
-        </div>
 
-        <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Thời gian</th>
-                        <th class="text-end">Doanh thu</th>
-                    </tr>
-                </thead>
-                <tbody>
+<div class="col-xl-3 col-md-6">
+<div class="card dashboard-card h-100 p-4">
+<div class="d-flex justify-content-between align-items-center">
+<div>
+<div class="dashboard-title">Doanh thu hôm nay</div>
+<div class="dashboard-value text-danger">
+{{ revenue_today|intcomma }} đ
+</div>
+</div>
 
-                    {% if start_date and end_date or month and year %}
-                        {% for r in revenue_by_day %}
-                        <tr>
-                            <td>{{ r.day|date:"d/m/Y" }}</td>
-                            <td class="text-success fw-semibold text-end">
-                                {{ r.total|intcomma }} đ
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="2" class="text-center text-muted py-4">
-                                Không có dữ liệu
-                            </td>
-                        </tr>
-                        {% endfor %}
+<div class="bg-danger bg-opacity-10 p-3 rounded-circle">
+<i class="bi bi-calendar-day fs-4 text-danger"></i>
+</div>
 
-                    {% elif year %}
-                        {% for r in revenue_by_month %}
-                        <tr>
-                            <td>Tháng {{ r.month|date:"m" }}</td>
-                            <td class="text-success fw-semibold text-end">
-                                {{ r.total|intcomma }} đ
-                            </td>
-                        </tr>
-                        {% endfor %}
+</div>
+</div>
+</div>
 
-                    {% else %}
-                        {% for r in revenue_by_year %}
-                        <tr>
-                            <td>{{ r.year|date:"Y" }}</td>
-                            <td class="text-danger fw-semibold text-end">
-                                {{ r.total|intcomma }} đ
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% endif %}
+</div>
 
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- TOP PRODUCTS -->
-    <div class="card dashboard-card mb-4">
-        <div class="card-header">
-            🔥 Top sản phẩm bán chạy
-        </div>
-        <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Sản phẩm</th>
-                        <th class="text-center">Số lượng</th>
-                        <th class="text-end">Doanh thu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in top_products %}
-                    <tr>
-                        <td>{{ p.product__name }}</td>
-                        <td class="text-center">{{ p.total_qty }}</td>
-                        <td class="text-danger fw-semibold text-end">
-                            {{ p.revenue|intcomma }} đ
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
-                            Chưa có dữ liệu
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+<!-- FILTER -->
+<div class="card dashboard-card mb-4">
+<div class="card-body filter-box">
+
+<form method="get" class="row g-3 align-items-end">
+
+<div class="col-lg-2">
+<label class="form-label small fw-semibold">Tháng</label>
+<select name="month" class="form-select">
+<option value="">Tất cả</option>
+{% for m in months %}
+<option value="{{ m }}" {% if month == m %}selected{% endif %}>
+{{ m }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-lg-2">
+<label class="form-label small fw-semibold">Năm</label>
+<select name="year" class="form-select">
+<option value="">Tất cả</option>
+{% for y in years %}
+<option value="{{ y }}" {% if year == y %}selected{% endif %}>
+{{ y }}
+</option>
+{% endfor %}
+</select>
+</div>
+
+<div class="col-lg-3">
+<label class="form-label small fw-semibold">Từ ngày</label>
+<input type="date" name="start_date"
+value="{{ start_date|default:'' }}"
+class="form-control">
+</div>
+
+<div class="col-lg-3">
+<label class="form-label small fw-semibold">Đến ngày</label>
+<input type="date" name="end_date"
+value="{{ end_date|default:'' }}"
+class="form-control">
+</div>
+
+<div class="col-lg-2 d-grid">
+<button class="btn btn-primary">
+<i class="bi bi-filter"></i> Lọc
+</button>
+</div>
+
+</form>
+
+</div>
+</div>
+
+
+<!-- REVENUE TABLE -->
+<div class="card dashboard-card mb-4">
+
+<div class="card-header">
+
+{% if start_date and end_date %}
+📅 Doanh thu theo ngày ({{ start_date|date:"d/m/Y" }} - {{ end_date|date:"d/m/Y" }})
+
+{% elif month and year %}
+📆 Doanh thu tháng {{ month }}/{{ year }}
+
+{% elif year %}
+📊 Doanh thu theo tháng năm {{ year }}
+
+{% else %}
+📈 Doanh thu theo năm
+{% endif %}
+
+</div>
+
+<div class="card-body p-0">
+
+<table class="table table-hover mb-0">
+
+<thead>
+<tr>
+<th>Thời gian</th>
+<th class="text-end">Doanh thu</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% if start_date and end_date or month and year %}
+
+{% for r in revenue_by_day %}
+<tr>
+<td>{{ r.day|date:"d/m/Y" }}</td>
+<td class="text-success fw-semibold text-end">
+{{ r.total|intcomma }} đ
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="2" class="text-center text-muted py-4">
+Không có dữ liệu
+</td>
+</tr>
+{% endfor %}
+
+{% elif year %}
+
+{% for r in revenue_by_month %}
+<tr>
+<td>Tháng {{ r.month|date:"m" }}</td>
+<td class="text-success fw-semibold text-end">
+{{ r.total|intcomma }} đ
+</td>
+</tr>
+{% endfor %}
+
+{% else %}
+
+{% for r in revenue_by_year %}
+<tr>
+<td>{{ r.year|date:"Y" }}</td>
+<td class="text-danger fw-semibold text-end">
+{{ r.total|intcomma }} đ
+</td>
+</tr>
+{% endfor %}
+
+{% endif %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<!-- TOP + STATUS -->
+<div class="row g-4 mb-4">
+
+<div class="col-lg-6">
+
+<div class="card dashboard-card h-100">
+
+<div class="card-header">
+🔥 Top sản phẩm bán chạy
+</div>
+
+<div class="card-body p-0">
+
+<table class="table table-hover mb-0">
+
+<thead>
+<tr>
+<th>Sản phẩm</th>
+<th class="text-center">SL</th>
+<th class="text-end">Doanh thu</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for p in top_products %}
+<tr>
+<td>{{ p.product__name }}</td>
+<td class="text-center">{{ p.total_qty }}</td>
+<td class="text-danger fw-semibold text-end">
+{{ p.revenue|intcomma }} đ
+</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="3" class="text-center text-muted py-4">
+Chưa có dữ liệu
+</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+</div>
+
+
+<div class="col-lg-6">
+
+<div class="card dashboard-card h-100">
 
     <!-- THỐNG KÊ TRẠNG THÁI ĐƠN -->
     <div class="card dashboard-card mb-4">
@@ -313,61 +383,79 @@
             </table>
         </div>
     </div>
-    <!-- CHART -->
-    <div class="card dashboard-card">
-        <div class="card-header">
-            📊 Biểu đồ doanh thu
-        </div>
-        <div class="card-body">
-            <canvas id="revenueChart" height="100"></canvas>
-        </div>
-    </div>
+</div>
 
 </div>
 
+</div>
+
+
+<!-- CHART -->
+<div class="card dashboard-card">
+
+<div class="card-header">
+📊 Biểu đồ doanh thu
+</div>
+
+<div class="card-body">
+
+<canvas id="revenueChart" height="80"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+
+
 <script>
-    const labels = {{ chart_labels|safe }};
-    const data = {{ chart_data|safe }};
 
-    const ctx = document.getElementById('revenueChart');
+const labels = {{ chart_labels|safe }};
+const data = {{ chart_data|safe }};
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: data,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13,110,253,0.08)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#f1f1f1'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
-    });
+const ctx = document.getElementById('revenueChart');
+
+new Chart(ctx, {
+
+type: 'line',
+
+data: {
+labels: labels,
+datasets: [{
+label: 'Doanh thu',
+data: data,
+borderColor: '#0d6efd',
+backgroundColor: 'rgba(13,110,253,0.08)',
+borderWidth: 2,
+tension: 0.4,
+fill: true,
+pointRadius: 3
+}]
+},
+
+options: {
+
+responsive: true,
+
+plugins:{
+legend:{display:true}
+},
+
+scales:{
+y:{
+beginAtZero:true,
+grid:{color:'#f1f1f1'}
+},
+x:{
+grid:{display:false}
+}
+}
+
+}
+
+});
+
 </script>
 
 {% endblock %}

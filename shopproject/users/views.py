@@ -42,19 +42,15 @@ def register(request):
     if request.method == 'POST':
         user_form = UserRegistrationForm(request.POST)
         profile_form = ProfileEditForm(request.POST, request.FILES)
-
         if user_form.is_valid() and profile_form.is_valid():
-            # Save user
             new_user = user_form.save(commit=False)
             new_user.set_password(user_form.cleaned_data['password'])
             new_user.save()
-
-            # Save profile
-            profile = profile_form.save(commit=False)
-            profile.user = new_user
+            profile = new_user.profile
+            profile.phone = profile_form.cleaned_data['phone']
+            profile.photo = profile_form.cleaned_data['photo']
             profile.save()
-
-            return render(request, 'users/register_done.html')
+            return redirect('users:register_done')
     else:
         user_form = UserRegistrationForm()
         profile_form = ProfileEditForm()
@@ -63,6 +59,9 @@ def register(request):
         'user_form': user_form,
         'profile_form': profile_form
     })
+
+def register_done(request):
+    return render(request, 'users/register_done.html')
 
 @login_required
 def index(request):

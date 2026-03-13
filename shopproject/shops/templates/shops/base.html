@@ -96,8 +96,14 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'shops:all_shops' %}">
+          <a class="nav-link" href="{% url 'shops:product_list' %}">
             <i class="bi bi-grid"></i> All products
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'shops:wishlist' %}">
+            <i class="bi bi-star"></i> Wishlist
           </a>
         </li>
         {% if request.user.is_staff %}
@@ -120,6 +126,23 @@
         {% endif %}
       </ul>
 
+      <!--Noti-->
+      <ul class="navbar-nav me-2">
+        <li class="nav-item">
+          <a class="nav-link position-relative"
+            href="{% url 'shops:notifications' %}">
+
+            <i class="bi bi-bell fs-5"></i>
+
+            {% if unread_notifications > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+              {{ unread_notifications }}
+            </span>
+            {% endif %}
+
+          </a>
+        </li>
+      </ul>
       <!-- Cart -->
       {% if request.user.is_authenticated %}
       <ul class="navbar-nav me-3">
@@ -157,7 +180,14 @@
 
             <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4">
 
-              <li class="dropdown-header text-center fw-bold">👋 {{ request.user.username }}</li>
+              <li class="dropdown-header text-center">
+                  <div class="fw-bold">
+                      👋 {{ request.user.username }}
+                  </div>
+                  <div class="text-muted small">
+                      ID: {{ request.user.profile.user_code }}
+                  </div>
+              </li>
               <li><hr class="dropdown-divider"></li>
 
               <li>
@@ -235,11 +265,12 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if "warning" in message.tags %} icon = "warning"; {% endif %}
 
     Swal.fire({
+        toast: true,
+        position: "top-end",
         icon: icon,
-        title: "Thông báo",
-        text: "{{ message }}",
-        timer: 1800,
-        showConfirmButton: false
+        title: "{{ message|striptags }}",
+        showConfirmButton: false,
+        timer: 2000,
     });
     {% endfor %}
 });

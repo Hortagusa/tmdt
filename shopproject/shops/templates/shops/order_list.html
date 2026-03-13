@@ -2,37 +2,44 @@
 {% load humanize %}
 
 {% block body %}
-<div class="container" style="max-width:1200px;">
+<div class="container-fluid px-4">
 
-    <!-- Header -->
+    <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
+
         <div>
-            <h3 class="fw-bold mb-1">📦 Danh sách đơn hàng</h3>
-            <div class="text-muted">Quản lý & theo dõi tất cả đơn hàng</div>
+            <h3 class="fw-bold mb-1">📦 Order Management</h3>
+            <div class="text-muted small">Theo dõi và quản lý tất cả đơn hàng</div>
         </div>
+
+        <a href="{% url 'shops:return_requests' %}"
+        class="btn btn-warning rounded-pill px-4 shadow-sm">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Return Requests
+        </a>
+
     </div>
 
     <!-- FILTER -->
-    <div class="card dashboard-card mb-4">
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
         <div class="card-body">
 
-            <!-- FORM FILTER -->
             <form method="get" class="row g-3 align-items-end">
 
-                <!-- USER -->
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Username</label>
+                <!-- USER ID -->
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small fw-semibold">User ID</label>
                     <input type="text"
-                           name="user"
-                           placeholder="Tìm username..."
-                           value="{{ user_raw }}"
-                           class="form-control">
+                           name="user_id"
+                           placeholder="VD: USR0007"
+                           value="{{ user_id }}"
+                           class="form-control rounded-pill">
                 </div>
 
                 <!-- MONTH -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Tháng</label>
-                    <select name="month" class="form-select">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-semibold">Tháng</label>
+                    <select name="month" class="form-select rounded-pill">
                         <option value="">Tất cả</option>
                         {% for m in months %}
                         <option value="{{ m }}" {% if month == m %}selected{% endif %}>
@@ -43,9 +50,9 @@
                 </div>
 
                 <!-- YEAR -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Năm</label>
-                    <select name="year" class="form-select">
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-semibold">Năm</label>
+                    <select name="year" class="form-select rounded-pill">
                         <option value="">Tất cả</option>
                         {% for y in years %}
                         <option value="{{ y }}" {% if year == y %}selected{% endif %}>
@@ -56,35 +63,34 @@
                 </div>
 
                 <!-- START DATE -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Từ ngày</label>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-semibold">Từ ngày</label>
                     <input type="date"
                            name="start_date"
                            value="{{ start_date|default:'' }}"
-                           class="form-control">
+                           class="form-control rounded-pill">
                 </div>
 
                 <!-- END DATE -->
-                <div class="col-md-2">
-                    <label class="form-label fw-semibold">Đến ngày</label>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-semibold">Đến ngày</label>
                     <input type="date"
                            name="end_date"
                            value="{{ end_date|default:'' }}"
-                           class="form-control">
+                           class="form-control rounded-pill">
                 </div>
 
-                <!-- BUTTON -->
-                <div class="col-md-1 d-grid">
-                    <button class="btn btn-primary">
-                        <i class="bi bi-filter"></i>
+                <div class="col-lg-3 d-flex gap-2">
+
+                    <button class="btn btn-primary rounded-pill px-4 flex-fill">
+                        <i class="bi bi-search"></i> Filter
                     </button>
-                </div>
 
-                <div class="col-md-2 d-grid">
                     <a href="{% url 'shops:order_list' %}"
-                       class="btn btn-outline-secondary">
-                        Bỏ lọc
+                    class="btn btn-outline-secondary rounded-pill px-4 flex-fill">
+                        Reset
                     </a>
+
                 </div>
 
             </form>
@@ -92,111 +98,142 @@
         </div>
     </div>
 
-    <!-- ORDER TABLE -->
-    <div class="card border-0 shadow-sm rounded-4">
+    <!-- TABLE -->
+    <div class="card shadow-sm border-0 rounded-4">
+
         <div class="card-body p-0">
 
             <div class="table-responsive">
+
                 <table class="table table-hover align-middle mb-0">
 
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
                             <th>Khách hàng</th>
-                            <th>Tổng tiền</th>
+                            <th>User ID</th>
+                            <th class="text-end">Tổng tiền</th>
                             <th>Thanh toán</th>
                             <th>Trạng thái</th>
                             <th>Ngày</th>
-                            <th class="text-end">Thao tác</th>
+                            <th class="text-end">Hành động</th>
                         </tr>
                     </thead>
 
                     <tbody>
+
                     {% for order in orders %}
-                        <tr>
+                    <tr>
 
-                            <td class="fw-bold">#{{ order.id }}</td>
+                        <td class="fw-semibold">#{{ order.id }}</td>
 
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    {% if order.user.profile.photo %}
-                                        <img src="{{ order.user.profile.photo.url }}"
-                                             class="rounded-circle"
-                                             style="width:36px;height:36px;object-fit:cover;">
-                                    {% else %}
-                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
-                                             style="width:36px;height:36px;">
-                                            <i class="bi bi-person-fill"></i>
-                                        </div>
-                                    {% endif %}
-                                    <span>{{ order.user.username }}</span>
-                                </div>
-                            </td>
+                        <!-- USER -->
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
 
-                            <td class="fw-semibold text-danger">
-                                {{ order.total_price|floatformat:0|intcomma }} đ
-                            </td>
-
-                            <td>
-                                <span class="badge bg-info text-dark rounded-pill">
-                                    {{ order.payment_method }}
-                                </span>
-                            </td>
-
-                            <td>
-                                {% if order.status == 'pending' %}
-                                    <span class="badge bg-warning rounded-pill">Pending</span>
-                                {% elif order.status == 'processing' %}
-                                    <span class="badge bg-primary rounded-pill">Processing</span>
-                                {% elif order.status == 'confirmed' %}
-                                    <span class="badge bg-secondary rounded-pill">Confirmed</span>
-                                {% elif order.status == 'shipping' %}
-                                    <span class="badge bg-info rounded-pill">Shipping</span>
-                                {% elif order.status == 'completed' %}
-                                    <span class="badge bg-success rounded-pill">Completed</span>
-                                {% elif order.status == 'cancelled' %}
-                                    <span class="badge bg-danger rounded-pill">Cancelled</span>
+                                {% if order.user.profile.photo %}
+                                <img src="{{ order.user.profile.photo.url }}"
+                                     class="rounded-circle"
+                                     style="width:38px;height:38px;object-fit:cover;">
                                 {% else %}
-                                    <span class="badge bg-secondary rounded-pill">
-                                        {{ order.get_status_display }}
-                                    </span>
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                                     style="width:38px;height:38px;">
+                                     <i class="bi bi-person-fill"></i>
+                                </div>
                                 {% endif %}
-                            </td>
 
-                            <td class="text-muted small">
-                                {{ order.created|date:"d/m/Y H:i" }}
-                            </td>
+                                <div>
+                                    <div class="fw-semibold">{{ order.user.username }}</div>
+                                </div>
 
-                            <td class="text-end">
-                                <a href="{% url 'shops:admin_order_detail' order.id %}"
-                                   class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                    <i class="bi bi-eye"></i> Xem
-                                </a>
+                            </div>
+                        </td>
 
-                                <a href="{% url 'shops:delete_order' order.id %}"
-                                   class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                    <i class="bi bi-trash"></i> Xóa
-                                </a>
-                            </td>
+                        <!-- USER CODE -->
+                        <td>
+                            <span class="badge bg-dark rounded-pill">
+                                {{ order.user.profile.user_code }}
+                            </span>
+                        </td>
 
-                        </tr>
+                        <!-- PRICE -->
+                        <td class="text-end fw-semibold text-danger">
+                            {{ order.total_price|floatformat:0|intcomma }} đ
+                        </td>
+
+                        <!-- PAYMENT -->
+                        <td>
+                            <span class="badge bg-info-subtle text-dark rounded-pill px-3">
+                                {{ order.payment_method }}
+                            </span>
+                        </td>
+
+                        <!-- STATUS -->
+                        <td>
+
+                            {% if order.status == 'pending' %}
+                                <span class="badge bg-warning-subtle text-dark rounded-pill px-3">Pending</span>
+                            {% elif order.status == 'processing' %}
+                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3">Processing</span>
+                            {% elif order.status == 'confirmed' %}
+                                <span class="badge bg-secondary rounded-pill px-3">Confirmed</span>
+                            {% elif order.status == 'shipping' %}
+                                <span class="badge bg-info rounded-pill px-3">Shipping</span>
+                            {% elif order.status == 'completed' %}
+                                <span class="badge bg-success rounded-pill px-3">Completed</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger rounded-pill px-3">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-secondary rounded-pill px-3">
+                                    {{ order.get_status_display }}
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <!-- DATE -->
+                        <td class="text-muted small">
+                            {{ order.created|date:"d/m/Y H:i" }}
+                        </td>
+
+                        <!-- ACTION -->
+                        <td class="text-end">
+
+                            <a href="{% url 'shops:admin_order_detail' order.id %}"
+                               class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            <a href="{% url 'shops:delete_order' order.id %}"
+                               class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                <i class="bi bi-trash"></i>
+                            </a>
+
+                        </td>
+
+                    </tr>
 
                     {% empty %}
-                        <tr>
-                            <td colspan="7">
-                                <div class="text-center py-5 text-muted">
-                                    <i class="bi bi-receipt fs-1"></i>
-                                    <p class="mt-3">Chưa có đơn hàng nào</p>
-                                </div>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="8">
+
+                            <div class="text-center py-5 text-muted">
+                                <i class="bi bi-receipt fs-1"></i>
+                                <p class="mt-3">Chưa có đơn hàng nào</p>
+                            </div>
+
+                        </td>
+                    </tr>
                     {% endfor %}
+
                     </tbody>
 
                 </table>
+
             </div>
 
         </div>
+
     </div>
 
 </div>

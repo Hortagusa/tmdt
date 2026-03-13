@@ -23,6 +23,28 @@
         {% endif %}
     </div>
 
+    {% if low_stock_products %}
+    <div class="alert alert-warning shadow-sm rounded-4 mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Low Stock Warning</strong>
+        </div>
+
+        <div class="small">
+            Các sản phẩm của bạn sắp hết hàng:
+        </div>
+
+        <ul class="mb-0 mt-2">
+            {% for p in low_stock_products %}
+            <li>
+                {{ p.name }} – chỉ còn
+                <strong>{{ p.stock }}</strong> sản phẩm
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <!-- Category filter -->
     <div class="mb-4">
         <div class="d-flex flex-wrap gap-2">
@@ -85,9 +107,15 @@
 
                     <div class="d-flex gap-2">
                         {% if product.seller != request.user %}
-                            <a href="{% url 'shops:add_to_cart' product.id %}" class="btn btn-success btn-sm rounded-pill flex-fill">
-                               <i class="bi bi-cart-plus"></i> Add to cart
-                            </a>
+                            {% if product.stock <= 0 %}
+                                <a href="{% url 'shops:add_to_wishlist' product.id %}" class="btn btn-warning btn-sm rounded-pill flex-fill">
+                                    Add to Wishlist
+                                </a>
+                            {% else %}
+                                <a href="{% url 'shops:add_to_cart' product.id %}" class="btn btn-success btn-sm rounded-pill flex-fill">
+                                    <i class="bi bi-cart-plus"></i> Add to cart
+                                </a>
+                            {% endif %}
                         {% endif %}
 
                         {% if product.seller == request.user %}

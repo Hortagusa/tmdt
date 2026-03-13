@@ -124,6 +124,22 @@
             </div>
         </div>
 
+        {% if not request.user.is_staff and order.status == "completed" %}
+        <div class="mt-3">
+
+            {% if order.created|timesince < "7 days" %}
+                <a href="{% url 'shops:request_return' order.id %}"
+                class="btn btn-outline-danger rounded-pill">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Yêu cầu trả hàng / hoàn tiền
+
+                </a>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
         {% if request.user.is_staff %}
             <!-- form update -->
             <!-- Status Update -->

@@ -16,7 +16,7 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.utils.html import strip_tags
 
-from .models import Product, Category, Cart, CartItem, Order, OrderItem, Comment
+from .models import Product, Category, Cart, CartItem, Order, OrderItem, Comment, Wishlist, Notification, Wallet, WalletTransaction, ReturnRequest
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
@@ -35,11 +35,18 @@ from django.utils.dateparse import parse_date
 from django.utils import timezone
 import json
 
+@login_required
 def index(request):
     category_id = request.GET.get('category')
-
     products = Product.objects.filter(seller=request.user)
     categories = Category.objects.all()
+    # sản phẩm sắp hết hàng của user
+    low_stock_products = []
+    if request.user.is_authenticated:
+        low_stock_products = Product.objects.filter(
+            seller=request.user,
+            stock__lt=10
+        )
 
     if category_id:
         products = products.filter(category_id=category_id)
@@ -47,7 +54,8 @@ def index(request):
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': int(category_id) if category_id else None
+        'selected_category': int(category_id) if category_id else None,
+        "low_stock_products": low_stock_products,
     }
 
     return render(request, 'shops/index.html', context)
@@ -61,7 +69,6 @@ def all_shops(request):
 
 def product_list(request):
     category_id = request.GET.get('category')
-
     products = Product.objects.all().select_related('category', 'seller', 'seller__profile')
     categories = Category.objects.all()
 
@@ -71,13 +78,47 @@ def product_list(request):
     context = {
         'products': products,
         'categories': categories,
-        'selected_category': int(category_id) if category_id else None
+        'selected_category': int(category_id) if category_id else None,
     }
     return render(request, 'shops/product_list.html', context)
 
 def get_or_create_cart(user):
     cart, created = Cart.objects.get_or_create(user=user)
     return cart
+
+#wishlist
+@login_required
+def add_to_wishlist(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    # chỉ cho wishlist khi hết hàng
+    if product.stock > 0:
+        messages.warning(request, "Sản phẩm vẫn còn hàng, bạn có thể mua ngay.")
+        return redirect('shops:product_detail', id=product.id)
+    Wishlist.objects.get_or_create(
+        user=request.user,
+        product=product
+    )
+    messages.success(request, "Đã thêm vào wishlist.")
+    return redirect('shops:product_detail', id=product.id)
+
+@login_required
+def wishlist(request):
+    items = Wishlist.objects.filter(user=request.user).select_related('product')
+
+    return render(request, 'shops/wishlist.html', {
+        'items': items
+    })
+    
+@login_required
+def remove_from_wishlist(request, product_id):
+    wishlist_item = get_object_or_404(
+        Wishlist,
+        user=request.user,
+        product_id=product_id
+    )
+    wishlist_item.delete()
+    messages.success(request, "Đã xóa sản phẩm khỏi wishlist.")
+    return redirect('shops:wishlist')
 
 @login_required
 def category_create(request):
@@ -181,16 +222,40 @@ def comment_edit(request, id):
     })
 
 def product_update(request, id):
+
     product = get_object_or_404(Product, id=id)
 
     if product.seller != request.user:
         return HttpResponseForbidden("Bạn không có quyền sửa sản phẩm này")
 
+    old_stock = product.stock  # lưu stock trước khi update
+
     if request.method == 'POST':
+
         form = ProductForm(request.POST, request.FILES, instance=product)
+
         if form.is_valid():
-            form.save()
+
+            product = form.save()
+
+            new_stock = product.stock
+
+            # nếu trước đó hết hàng và bây giờ có hàng lại
+            if old_stock == 0 and new_stock > 0:
+
+                wishlists = Wishlist.objects.filter(product=product)
+
+                for item in wishlists:
+
+                    Notification.objects.create(
+                        user=item.user,
+                        message=f"Sản phẩm '{product.name}' đã có hàng lại!",
+                        notification_type='restock',
+                        link=reverse('shops:product_detail', args=[product.id])
+                    )
+
             return redirect('shops:product_list')
+
     else:
         form = ProductForm(instance=product)
 
@@ -215,7 +280,10 @@ def add_to_cart(request, product_id):
 
     # vượt stock
     if item.quantity >= product.stock:
-        messages.error(request, f"Sản phẩm '{product.name}' chỉ còn {product.stock} sản phẩm trong kho!")
+        messages.warning(
+            request,
+            f"Bạn đã thêm tối đa số lượng cho sản phẩm '{product.name}'."
+        )
         return redirect(request.META.get('HTTP_REFERER', 'shops:product_list'))
 
     #  hợp lệ
@@ -731,6 +799,12 @@ def admin_order_detail(request, order_id):
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    Notification.objects.create(
+        user=order.user,
+        message=f"Đơn hàng #{order.id} đã chuyển trạng thái {order.status}.",
+        notification_type='order',
+        link=reverse('shops:order_detail', args=[order.id])
+    )
     STATUS_FLOW = {
         'pending': ['confirmed', 'cancelled'],
         'confirmed': ['shipping', 'cancelled'],
@@ -760,7 +834,7 @@ def order_list(request):
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     has_filter = any([month_raw, year_raw, start_date_raw, end_date_raw])
-    user_raw = request.GET.get('user')
+    user_id = request.GET.get('user_id')
 
     month = None
     year = None
@@ -782,8 +856,8 @@ def order_list(request):
         year = None
 
     orders = Order.objects.select_related('user').all()
-    if user_raw:
-        orders = orders.filter(user__username__icontains=user_raw)
+    if user_id:
+        orders = orders.filter(user__profile__user_code__icontains=user_id)
     if year:
         orders = orders.filter(created__year=year)
     if month:
@@ -810,7 +884,7 @@ def order_list(request):
 
     return render(request, 'shops/order_list.html', {
         'orders': orders,
-        'user_raw': user_raw,
+        'user_id': user_id,
         'months': list(range(1, 13)),
         'years': list(range(current_year - 5, current_year + 1)),
         'month': month,
@@ -1114,3 +1188,177 @@ def _send_order_email(order, request):
     )
     email.attach_alternative(html_content, "text/html")
     email.send(fail_silently=True)
+        
+#noti  
+@login_required
+def notifications(request):
+    notifications = request.user.notifications.all()
+    return render(request, "shops/notifications.html", {
+        "notifications": notifications
+    })
+    
+@login_required
+def read_notification(request, id):
+
+    notification = get_object_or_404(
+        Notification,
+        id=id,
+        user=request.user
+    )
+
+    # đánh dấu đã đọc
+    notification.is_read = True
+    notification.save()
+
+    # nếu có link thì chuyển tới link đó
+    if notification.link:
+        return redirect(notification.link)
+
+    return redirect('shops:notifications')
+
+@login_required
+def mark_all_notifications_read(request):
+
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+
+    return redirect('shops:notifications')
+
+@login_required
+def delete_notification(request, id):
+    notification = get_object_or_404(
+        Notification,
+        id=id,
+        user=request.user
+    )
+    notification.delete()
+    messages.success(request, "Đã xóa thông báo.")
+    return redirect('shops:notifications')
+
+#refund
+@login_required
+def request_return(request, order_id):
+
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        user=request.user
+    )
+
+    # chỉ cho trả khi đơn hoàn thành
+    if order.status != "completed":
+        messages.error(request, "You can only return completed orders.")
+        return redirect('shops:order_detail', order_id=order.id)
+
+    # giới hạn 7 ngày
+    if timezone.now() > order.created + timedelta(days=7):
+        messages.error(request, "Return period has expired (7 days).")
+        return redirect('shops:order_detail', order_id=order.id)
+
+    # tránh gửi nhiều request
+    if ReturnRequest.objects.filter(order=order).exists():
+        messages.warning(request, "You have already requested a return.")
+        return redirect('shops:order_detail', order_id=order.id)
+
+    if request.method == "POST":
+
+        reason = request.POST.get("reason")
+
+        ReturnRequest.objects.create(
+            order=order,
+            user=request.user,
+            reason=reason
+        )
+
+        messages.success(request, "Return request sent.")
+
+        return redirect('shops:order_detail', order_id=order.id)
+
+    return render(request, "shops/request_return.html", {
+        "order": order
+    })
+    
+@staff_member_required
+def return_requests(request):
+
+    requests = ReturnRequest.objects.select_related(
+        "order", "user"
+    ).order_by("-created")
+
+    return render(request, "shops/admin_return_requests.html", {
+        "requests": requests
+    })
+        
+@staff_member_required
+def approve_refund(request, return_id):
+
+    return_request = get_object_or_404(ReturnRequest, id=return_id)
+
+    if return_request.status != "pending":
+        return redirect("shops:return_requests")
+
+    order = return_request.order
+
+    wallet, created = Wallet.objects.get_or_create(
+        user=order.user
+    )
+
+    wallet.balance += order.total_price
+    wallet.save()
+
+    WalletTransaction.objects.create(
+        wallet=wallet,
+        amount=order.total_price,
+        transaction_type="refund",
+        description=f"Refund for order #{order.id}"
+    )
+
+    # cập nhật trạng thái
+    return_request.status = "resolved"
+    return_request.resolved_at = timezone.now()
+    return_request.save()
+
+    Notification.objects.create(
+        user=order.user,
+        message=f"Refund for order #{order.id} has been added to your wallet.",
+        notification_type="order",
+        link=f"/shops/wallet/"
+    )
+
+    messages.success(request, "Refund completed")
+
+    return redirect("shops:return_requests")
+
+@staff_member_required
+def reject_return(request, return_id):
+
+    r = get_object_or_404(ReturnRequest, id=return_id)
+
+    r.status = "resolved"
+    r.resolved_at = timezone.now()
+    r.save()
+
+    Notification.objects.create(
+        user=r.user,
+        message=f"Return request for order #{r.order.id} was rejected.",
+        notification_type="order",
+        link=f"/shops/orders/{r.order.id}/"
+    )
+
+    messages.success(request, "Return request rejected")
+
+    return redirect("shops:return_requests")
+
+#wallet
+@login_required
+def wallet(request):
+
+    wallet, created = Wallet.objects.get_or_create(
+        user=request.user
+    )
+
+    transactions = wallet.transactions.order_by("-created")
+
+    return render(request, "shops/wallet.html", {
+        "wallet": wallet,
+        "transactions": transactions
+    })

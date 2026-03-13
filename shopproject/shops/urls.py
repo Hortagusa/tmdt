@@ -14,6 +14,10 @@ urlpatterns = [
     path('products/<int:id>/delete/', views.product_delete, name='product_delete'),
     path("comment/delete/<int:id>/", views.comment_delete, name="comment_delete"),
     path("comment/edit/<int:id>/", views.comment_edit, name="comment_edit"),
+    #wishlist
+    path('wishlist/', views.wishlist, name='wishlist'),
+    path('wishlist/add/<int:product_id>/', views.add_to_wishlist, name='add_to_wishlist'),
+    path('wishlist/remove/<int:product_id>/', views.remove_from_wishlist, name='remove_from_wishlist'),
     # category
     path('category/add/', views.category_create, name='category_create'),
     # cart
@@ -41,5 +45,17 @@ urlpatterns = [
     path('orders/history/', views.order_history, name='order_history'),
     #hủy đơn hàng
     path('orders/<int:order_id>/cancel/', views.cancel_order, name='cancel_order'),
+    #noti
+    path('notifications/', views.notifications, name='notifications'),
+    path('notifications/read/<int:id>/', views.read_notification, name='read_notification'),
+    path('notifications/read-all/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    path('notifications/delete/<int:id>/', views.delete_notification, name='delete_notification'),
+    #ví và trả hàng, hoàn tiền
+    path('wallet/', views.wallet, name='wallet'),
+    path('orders/<int:order_id>/return/', views.request_return, name='request_return'),
+    path("admin/returns/", views.return_requests, name="return_requests"),
+    path('admin/refund/<int:return_id>/', views.approve_refund, name='approve_refund'),
+    path("admin/returns/<int:return_id>/approve/", views.approve_refund, name="approve_refund"),
+    path("admin/returns/<int:return_id>/reject/", views.reject_return, name="reject_return"),
 ]
 
