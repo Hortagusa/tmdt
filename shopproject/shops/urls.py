@@ -12,6 +12,8 @@ urlpatterns = [
     path('products/add/', views.product_create, name='product_create'),
     path('products/<int:id>/edit/', views.product_update, name='product_update'),
     path('products/<int:id>/delete/', views.product_delete, name='product_delete'),
+    path("comment/delete/<int:id>/", views.comment_delete, name="comment_delete"),
+    path("comment/edit/<int:id>/", views.comment_edit, name="comment_edit"),
     # category
     path('category/add/', views.category_create, name='category_create'),
     # cart

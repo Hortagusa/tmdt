@@ -16,7 +16,7 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.utils.html import strip_tags
 
-from .models import Product, Category, Cart, CartItem, Order, OrderItem
+from .models import Product, Category, Cart, CartItem, Order, OrderItem, Comment
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
@@ -110,12 +110,48 @@ def product_create(request):
         'title': 'Add product'
     })
 
+@login_required
 def product_detail(request, id):
     product = get_object_or_404(Product, id=id)
 
-    return render(request, 'shops/shop_detail.html', {
-        'product': product
+    if request.method == "POST":
+        content = request.POST.get("content")
+        parent_id = request.POST.get("parent")
+
+        parent = None
+        if parent_id:
+            parent = Comment.objects.get(id=parent_id)
+
+        Comment.objects.create(
+            product=product,
+            user=request.user,
+            content=content,
+            parent=parent
+        )
+
+        return redirect("shops:product_detail", id=product.id)
+
+    comments = Comment.objects.filter(product=product, parent__isnull=True)
+
+    return render(request, "shops/shop_detail.html", {
+        "product": product,
+        "comments": comments
     })
+
+@login_required
+def comment_delete(request, id):
+    comment = get_object_or_404(Comment, id=id)
+
+    # chỉ cho phép người viết comment xoá
+    if comment.user != request.user:
+        messages.error(request, "Bạn không có quyền xoá comment này!")
+        return redirect('shops:product_detail', id=comment.product.id)
+
+    product_id = comment.product.id
+    comment.delete()
+
+    messages.success(request, "Đã xoá comment!")
+    return redirect('shops:product_detail', id=product_id)
 
 def product_delete(request, id):
     product = get_object_or_404(Product, id=id)
@@ -129,6 +165,19 @@ def product_delete(request, id):
 
     return render(request, 'shops/product_confirm_delete.html', {
         'product': product
+    })
+
+@login_required
+def comment_edit(request, id):
+    comment = get_object_or_404(Comment, id=id)
+    if comment.user != request.user:
+        return redirect("shops:product_detail", id=comment.product.id)
+    if request.method == "POST":
+        comment.content = request.POST.get("content")
+        comment.save()
+        return redirect("shops:product_detail", id=comment.product.id)
+    return render(request, "shops/comment_edit.html", {
+        "comment": comment
     })
 
 def product_update(request, id):
@@ -682,12 +731,25 @@ def admin_order_detail(request, order_id):
 @staff_member_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    STATUS_FLOW = {
+        'pending': ['confirmed', 'cancelled'],
+        'confirmed': ['shipping', 'cancelled'],
+        'shipping': ['completed'],
+        'completed': [],
+        'cancelled': [],
+    }
 
     if request.method == 'POST':
         new_status = request.POST.get('status')
+        allowed = STATUS_FLOW.get(order.status, [])
+        if order.status in ['completed', 'cancelled']:
+            messages.error(request, "Đơn hàng đã kết thúc, không thể thay đổi!")
+            return redirect('shops:admin_order_detail', order_id=order.id)
+        if new_status not in allowed:
+            messages.error(request, "Không thể cập nhật trạng thái ngược!")
+            return redirect('shops:admin_order_detail', order_id=order.id)
         order.status = new_status
-        order.save()
-
+        order.save(update_fields=["status"])
         messages.success(request, 'Cập nhật trạng thái thành công!')
         return redirect('shops:admin_order_detail', order_id=order.id)
 
@@ -698,6 +760,7 @@ def order_list(request):
     start_date_raw = request.GET.get('start_date')
     end_date_raw = request.GET.get('end_date')
     has_filter = any([month_raw, year_raw, start_date_raw, end_date_raw])
+    user_raw = request.GET.get('user')
 
     month = None
     year = None
@@ -719,6 +782,8 @@ def order_list(request):
         year = None
 
     orders = Order.objects.select_related('user').all()
+    if user_raw:
+        orders = orders.filter(user__username__icontains=user_raw)
     if year:
         orders = orders.filter(created__year=year)
     if month:
@@ -729,12 +794,23 @@ def order_list(request):
         orders = orders.filter(created__date__gte=start_date)
     elif end_date:
         orders = orders.filter(created__date__lte=end_date)
-
     orders = orders.order_by('-created')
-
     current_year = timezone.now().year
+
+    seven_days_ago = timezone.now() - timedelta(days=7)
+    expired_orders = Order.objects.filter(status="pending", created__lte=seven_days_ago)
+    for order in expired_orders:
+        with transaction.atomic():
+            order.status = "cancelled"
+            order.save()
+            for item in order.items.select_related('product'):
+                product = item.product
+                product.stock += item.quantity
+                product.save()
+
     return render(request, 'shops/order_list.html', {
         'orders': orders,
+        'user_raw': user_raw,
         'months': list(range(1, 13)),
         'years': list(range(current_year - 5, current_year + 1)),
         'month': month,

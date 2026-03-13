@@ -6,12 +6,10 @@
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
 
         {% if product.image %}
-            <img
-                src="{{ product.image.url }}"
-                class="card-img-top"
-                style="max-height: 450px; object-fit: cover;"
-                alt="{{ product.name }}"
-            >
+        <img src="{{ product.image.url }}"
+             class="card-img-top"
+             style="max-height:450px;object-fit:cover;"
+             alt="{{ product.name }}">
         {% endif %}
 
         <div class="card-body p-4">
@@ -22,18 +20,25 @@
             <!-- Category + Price -->
             <div class="d-flex flex-wrap gap-3 align-items-center mb-2">
                 <span class="badge bg-secondary">
-                    <i class="bi bi-tag"></i> {{ product.category.name|default:"No category" }}
+                    <i class="bi bi-tag"></i>
+                    {{ product.category.name|default:"No category" }}
                 </span>
+
                 <span class="fw-semibold text-danger fs-5">
                     {{ product.price }} đ
                 </span>
-                <div class="">Stock: {{ product.stock }}</div>
+
+                <span class="text-muted">
+                    Stock: {{ product.stock }}
+                </span>
             </div>
 
             <!-- Meta -->
             <div class="text-muted small mb-3">
                 <i class="bi bi-person-fill"></i> {{ product.seller.username }}
-                • <i class="bi bi-calendar"></i> {{ product.created|date:'H:i d/m/Y' }}
+                •
+                <i class="bi bi-calendar"></i>
+                {{ product.created|date:'H:i d/m/Y' }}
             </div>
 
             <!-- Description -->
@@ -44,38 +49,38 @@
                 </p>
             </div>
 
-            <!-- Caption / Content -->
             {% if product.caption %}
             <div class="mb-4">
                 <h6 class="fw-semibold mb-1">📝 Details</h6>
-                <p class="fs-6 mb-0">
+                <p class="mb-0">
                     {{ product.caption }}
                 </p>
             </div>
             {% endif %}
 
             {% if product.seller == request.user %}
-                <div class="d-flex gap-2 mt-4">
-                    <a href="{% url 'shops:product_update' product.id %}"
-                       class="btn btn-outline-warning btn-sm rounded-pill">
-                        <i class="bi bi-pencil-square"></i> Edit
-                    </a>
+            <div class="d-flex gap-2 mt-4">
+                <a href="{% url 'shops:product_update' product.id %}"
+                   class="btn btn-outline-warning btn-sm rounded-pill">
+                    <i class="bi bi-pencil"></i> Edit
+                </a>
 
-                    <a href="{% url 'shops:product_delete' product.id %}"
-                       class="btn btn-outline-danger btn-sm rounded-pill">
-                        <i class="bi bi-trash-fill"></i> Delete
-                    </a>
-                </div>
+                <a href="{% url 'shops:product_delete' product.id %}"
+                   class="btn btn-outline-danger btn-sm rounded-pill">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
             {% endif %}
 
             <hr class="my-4">
 
-            <!-- Comments -->
+            <!-- COMMENTS -->
             <h5 class="mb-3">
                 <i class="bi bi-chat-dots"></i>
                 Comments ({{ product.get_comments_count }})
             </h5>
 
+            <!-- Comment Form -->
             {% if user.is_authenticated %}
             <form method="post" class="mb-4">
                 {% csrf_token %}
@@ -85,6 +90,7 @@
                            class="form-control"
                            placeholder="Write a comment..."
                            required>
+
                     <button class="btn btn-primary">
                         <i class="bi bi-send"></i>
                     </button>
@@ -96,44 +102,113 @@
             </p>
             {% endif %}
 
+            <!-- Comment List -->
             {% for comment in comments %}
             <div class="d-flex mb-3">
 
                 <!-- Avatar -->
                 <div class="me-2">
                     {% if comment.user.profile.photo %}
-                        <img src="{{ comment.user.profile.photo.url }}"
-                             class="rounded-circle"
-                             style="width: 38px; height: 38px; object-fit: cover;">
+                    <img src="{{ comment.user.profile.photo.url }}"
+                         class="rounded-circle"
+                         style="width:38px;height:38px;object-fit:cover;">
                     {% else %}
-                        <div class="rounded-circle bg-secondary text-white d-flex
-                                    align-items-center justify-content-center"
-                             style="width: 38px; height: 38px;">
-                            <i class="bi bi-person-fill"></i>
-                        </div>
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                         style="width:38px;height:38px;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
                     {% endif %}
                 </div>
 
-                <!-- Content -->
+                <!-- Comment Content -->
                 <div class="flex-grow-1">
+
                     <div class="bg-light rounded-3 px-3 py-2">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong>{{ comment.user.username }}</strong>
-                            <small class="text-muted">{{ comment.created|date:"H:i d/m/Y" }}</small>
-                        </div>
+
+                        <strong>{{ comment.user.username }}</strong>
+
                         <p class="mb-1">{{ comment.content }}</p>
-                        {% if comment.user == request.user %}
-                            <a href="{% url 'products:comment_delete' comment.id %}"
-                               class="text-danger small">
-                                <i class="bi bi-trash"></i> Delete
+
+                        <small class="text-muted">
+                            {{ comment.created|date:"d/m/Y H:i" }}
+                        </small>
+
+                        <!-- Actions -->
+                        <div class="mt-1">
+
+                            {% if comment.user == request.user %}
+                            <a href="{% url 'shops:comment_edit' comment.id %}"
+                               class="me-2 small text-warning">
+                                Edit
                             </a>
-                        {% endif %}
+
+                            <form method="post"
+                                  action="{% url 'shops:comment_delete' comment.id %}"
+                                  class="d-inline">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-link text-danger p-0">
+                                    Delete
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-link text-primary p-0 ms-2"
+                                    onclick="document.getElementById('reply{{comment.id}}').style.display='block'">
+                                Reply
+                            </button>
+
+                        </div>
+
                     </div>
+
+                    <!-- Reply form -->
+                    <div id="reply{{comment.id}}" style="display:none;" class="mt-2">
+
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <input type="hidden"
+                                   name="parent"
+                                   value="{{ comment.id }}">
+
+                            <div class="input-group input-group-sm">
+
+                                <input type="text"
+                                       name="content"
+                                       class="form-control"
+                                       placeholder="Write a reply...">
+
+                                <button class="btn btn-outline-primary">
+                                    Reply
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                    <!-- Replies -->
+                    {% for reply in comment.replies.all %}
+                    <div class="ms-4 mt-2 bg-white border rounded-3 px-3 py-2">
+
+                        <strong>{{ reply.user.username }}</strong>
+
+                        <p class="mb-1">{{ reply.content }}</p>
+
+                        <small class="text-muted">
+                            {{ reply.created|date:"d/m/Y H:i" }}
+                        </small>
+
+                    </div>
+                    {% endfor %}
+
                 </div>
 
             </div>
+
             {% empty %}
-                <p class="text-muted">No comments yet 😢</p>
+            <p class="text-muted">No comments yet 😢</p>
             {% endfor %}
 
             <!-- Back -->
